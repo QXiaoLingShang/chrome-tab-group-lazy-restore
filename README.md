@@ -35,3 +35,10 @@ better_group/
 │   └── types.ts        # Shared TypeScript types
 └── dist/               # Generated extension files
 ```
+
+## Installation
+
+1. Download the ZIP package from the [latest release](https://github.com/QXiaoLingShang/chrome-tab-group-lazy-restore/releases).
+2. Extract the ZIP file.
+3. Open `chrome://extensions/` in Chrome and enable **Developer mode**.
+4. Click **Load unpacked** and select the extracted folder containing `manifest.json`.

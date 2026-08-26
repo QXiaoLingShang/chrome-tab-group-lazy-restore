@@ -10,6 +10,13 @@
 
 手动关闭这些标签页确实能释放内存，却也会让这组“以后还要用”的页面消失；保留它们，又要承受恢复时的内存峰值。Tab Group Lazy Restore 正是为了解决这个矛盾。
 
+## 安装
+
+1. 从 [最新 Release](https://github.com/QXiaoLingShang/chrome-tab-group-lazy-restore/releases) 下载 ZIP 安装包。
+2. 解压 ZIP 文件。
+3. 在 Chrome 中打开 `chrome://extensions/`，启用**开发者模式**。
+4. 点击**加载已解压的扩展程序（Load unpacked）**，选择包含 `manifest.json` 的解压文件夹。
+
 ## 原理
 
 Tab Group Lazy Restore 会在 Group 恢复时识别短时间内创建的同一批 Tab，然后按顺序处理：
