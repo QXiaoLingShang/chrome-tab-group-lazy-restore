@@ -1,4 +1,5 @@
 /** Tracks recently created tabs and short-lived Group restore batches. */
+import { loadRestoreConfig } from "./config.js";
 import { enqueueDiscard, isDiscardable } from "./discard.js";
 import type { GroupBatch, RecentTab, Tab, TabId } from "./types.js";
 
@@ -120,6 +121,29 @@ async function inspectGroup(batch: GroupBatch): Promise<void> {
       windowId: batch.windowId,
       groupId: batch.groupId
     });
+  } catch {
+    return;
+  }
+
+  const restoreConfig = await loadRestoreConfig();
+  if (restoreConfig === null) {
+    return;
+  }
+
+  // Skip discard for small Groups.
+  if (groupTabs.length <= restoreConfig.minTabs) {
+    return;
+  }
+
+  // Skip discard for Groups on the exclusion list.
+  try {
+    const group = await chrome.tabGroups.get(batch.groupId);
+    if (
+      group.title !== undefined &&
+      restoreConfig.excludedGroupTitles.includes(group.title)
+    ) {
+      return;
+    }
   } catch {
     return;
   }

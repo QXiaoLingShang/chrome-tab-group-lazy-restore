@@ -3,7 +3,7 @@
   "name": "Tab Group Lazy Restore",
   "version": "0.1.0",
   "description": "Reduce memory spikes when restoring Saved Tab Groups.",
-  "permissions": ["tabs"],
+  "permissions": ["tabs", "tabGroups", "storage"],
   "background": {
     "service_worker": "dist/background.js",
     "type": "module"
@@ -11,6 +11,7 @@
   "action": {
     "default_title": "Tab Group Lazy Restore"
   },
+  "options_page": "options.html",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
