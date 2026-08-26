@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tab Group Restore Settings</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: Arial, sans-serif;
+        --page-background: #ffffff;
+        --primary-text: #202124;
+        --secondary-text: #5f6368;
+        --line-color: #dadce0;
+        --strong-line: #9aa0a6;
+        --google-blue: #1a73e8;
+        --danger-color: #d93025;
+        --success-color: #188038;
+        --hover-background: #f8fafd;
+        --toast-background: #3c4043;
+        --toast-text: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background: var(--page-background);
+        color: var(--primary-text);
+      }
+
+      main {
+        width: min(720px, 100%);
+        margin: 0 auto;
+        padding: 24px 32px 52px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      .page-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--line-color);
+      }
+
+      .setting-icon {
+        display: grid;
+        align-self: center;
+        flex: 0 0 28px;
+        width: 28px;
+        height: 28px;
+        place-items: center;
+        color: var(--secondary-text);
+      }
+
+      .setting-icon svg {
+        width: 100%;
+        height: 100%;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.7;
+      }
+
+      .header-icon {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        object-fit: contain;
+      }
+
+      h1 {
+        font-size: 24px;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+      }
+
+      form {
+        margin-top: 8px;
+      }
+
+      .setting {
+        display: block;
+        padding: 18px 0 20px;
+        border-bottom: 1px solid var(--line-color);
+      }
+
+      .setting + .setting {
+        padding-top: 18px;
+      }
+
+      .setting-icon {
+        align-self: center;
+      }
+
+      .setting-heading {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+      }
+
+      h2 {
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .setting-subtitle {
+        margin-top: 5px;
+        color: var(--secondary-text);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      input,
+      button {
+        font: inherit;
+      }
+
+      input {
+        min-height: 38px;
+        border: 0;
+        border-bottom: 1px solid var(--strong-line);
+        background: transparent;
+        color: inherit;
+        outline: 0;
+      }
+
+      input:focus {
+        border-bottom: 2px solid var(--google-blue);
+      }
+
+      #min-tabs {
+        width: 72px;
+        padding: 0 6px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #min-tabs::-webkit-inner-spin-button,
+      #min-tabs::-webkit-outer-spin-button {
+        margin: 0;
+        -webkit-appearance: none;
+      }
+
+      #min-tabs {
+        appearance: textfield;
+      }
+
+      .setting-body {
+        min-width: 0;
+        margin-top: 14px;
+        margin-left: 44px;
+      }
+
+      .title-list {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .title-list:empty {
+        display: none;
+      }
+
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 40px;
+      }
+
+      .title-row:hover {
+        background: var(--hover-background);
+      }
+
+      .title-input {
+        flex: 1;
+        min-width: 0;
+        padding: 0 4px;
+        border-bottom: 1px solid var(--line-color);
+      }
+
+      .title-input:focus {
+        border-bottom: 2px solid var(--google-blue);
+      }
+
+      .title-entry {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 40px;
+        margin-top: 14px;
+        border-bottom: 1px solid var(--line-color);
+      }
+
+      .title-entry-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 40px;
+      }
+
+      .entry-spacer {
+        flex: 0 0 28px;
+        min-width: 28px;
+      }
+
+      .remove-title {
+        min-width: 28px;
+        min-height: 28px;
+        padding: 0 7px;
+        border: 0;
+        background: transparent;
+        color: var(--secondary-text);
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .remove-title:hover:not(:disabled) {
+        background: transparent;
+        color: var(--danger-color);
+      }
+
+      button {
+        min-height: 36px;
+        padding: 0 14px;
+        border: 1px solid var(--google-blue);
+        background: transparent;
+        color: var(--google-blue);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      button:hover:not(:disabled) {
+        background: var(--google-blue);
+        color: #ffffff;
+      }
+
+      button:focus-visible {
+        outline: 2px solid var(--google-blue);
+        outline-offset: 2px;
+      }
+
+      button:disabled {
+        cursor: default;
+        opacity: 0.42;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 18px;
+        padding-top: 20px;
+      }
+
+      .page-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 32px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line-color);
+        color: var(--secondary-text);
+        font-size: 12px;
+      }
+
+      .footer-meta,
+      .footer-links,
+      .footer-link {
+        display: flex;
+        align-items: center;
+      }
+
+      .footer-meta {
+        gap: 10px;
+      }
+
+      .footer-separator {
+        color: var(--line-color);
+      }
+
+      .footer-links {
+        gap: 16px;
+      }
+
+      .footer-link {
+        gap: 6px;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .footer-link-icon {
+        display: block;
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.6;
+      }
+
+      .footer-link:hover {
+        color: var(--google-blue);
+        text-decoration: underline;
+      }
+
+      @media (max-width: 560px) {
+        .page-footer {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      .toast-region {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        z-index: 10;
+        display: flex;
+        width: min(420px, calc(100% - 32px));
+        flex-direction: column;
+        gap: 8px;
+        transform: translateX(-50%);
+        pointer-events: none;
+      }
+
+      .toast {
+        padding: 12px 16px;
+        border-left: 4px solid var(--google-blue);
+        background: var(--toast-background);
+        box-shadow: 0 3px 8px rgb(0 0 0 / 20%);
+        color: var(--toast-text);
+        font-size: 13px;
+        line-height: 1.4;
+        animation: toast-in 180ms ease-out;
+      }
+
+      .toast.success {
+        border-left-color: var(--success-color);
+      }
+
+      .toast.error {
+        border-left-color: var(--danger-color);
+      }
+
+      .toast.leaving {
+        animation: toast-out 160ms ease-in forwards;
+      }
+
+      @keyframes toast-in {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes toast-out {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+      }
+
+      .secondary {
+        border-color: var(--strong-line);
+        color: var(--primary-text);
+      }
+
+      .secondary:hover:not(:disabled) {
+        border-color: var(--primary-text);
+        background: var(--primary-text);
+        color: var(--page-background);
+      }
+
+      @media (max-width: 560px) {
+        main {
+          padding: 20px 18px 44px;
+        }
+
+        h1 {
+          font-size: 21px;
+        }
+
+        .setting {
+          padding-top: 16px;
+        }
+
+        .setting-icon {
+          flex-basis: 26px;
+          width: 26px;
+          height: 26px;
+        }
+
+        .setting-heading {
+          grid-template-columns: 26px minmax(0, 1fr) auto;
+          gap: 14px;
+        }
+
+        .setting-body {
+          margin-left: 40px;
+        }
+
+        .actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .action-buttons,
+        .action-buttons button {
+          width: 100%;
+        }
+
+        .action-buttons button {
+          flex: 1;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page-background: #202124;
+          --primary-text: #e8eaed;
+          --secondary-text: #9aa0a6;
+          --line-color: #3c4043;
+          --strong-line: #9aa0a6;
+          --hover-background: #292a2d;
+          --toast-background: #303134;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="page-header">
+        <img class="header-icon" src="icons/icon48.png" alt="" />
+        <h1>Tab Group Restore Settings</h1>
+      </header>
+
+      <form id="settings-form">
+        <section class="setting" aria-labelledby="restore-heading">
+          <div class="setting-heading">
+            <span class="setting-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h16M4 12h10M4 17h7" />
+                <path d="M18 15v6M15 18h6" />
+              </svg>
+            </span>
+            <div class="setting-copy">
+              <h2 id="restore-heading">Minimum tab count</h2>
+              <p class="setting-subtitle">Groups at or below this count skip discard.</p>
+            </div>
+            <input
+              id="min-tabs"
+              type="number"
+              min="0"
+              step="1"
+              required
+              aria-label="Minimum tab count"
+            />
+          </div>
+        </section>
+
+        <section class="setting" aria-labelledby="excluded-heading">
+          <div class="setting-heading">
+            <span class="setting-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 8h7l2 2h9v10H3z" />
+                <path d="M3 8V5h7l2 3" />
+              </svg>
+            </span>
+            <div class="setting-copy">
+              <h2 id="excluded-heading">Group allowlist</h2>
+              <p class="setting-subtitle">Matching group titles skip discard.</p>
+            </div>
+          </div>
+          <div class="setting-body">
+            <div id="title-list" class="title-list" role="list"></div>
+            <div id="title-entry" class="title-entry"></div>
+          </div>
+        </section>
+
+        <div class="actions">
+          <div class="action-buttons">
+            <button class="secondary" id="reset-button" type="button">Restore defaults</button>
+            <button id="save-button" type="submit" disabled>Save settings</button>
+          </div>
+        </div>
+      </form>
+
+      <footer class="page-footer">
+        <div class="footer-meta">
+          <span>Tab Group Lazy Restore</span>
+          <span class="footer-separator" aria-hidden="true">·</span>
+          <span>v0.1.0</span>
+        </div>
+        <nav class="footer-links" aria-label="Project links">
+          <a class="footer-link" href="https://opensource.org/license/mit" target="_blank" rel="noreferrer">
+            <svg class="footer-link-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 3h9l3 3v15H6z" />
+              <path d="M15 3v4h4M9 12h6M9 16h4" />
+            </svg>
+            <span>MIT License</span>
+          </a>
+          <a class="footer-link" href="https://github.com/QXiaoLingShang/chrome-tab-group-lazy-restore" target="_blank" rel="noreferrer">
+            <svg class="footer-link-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 8 4 12l4 4M16 8l4 4-4 4M14 5l-4 14" />
+            </svg>
+            <span>GitHub</span>
+          </a>
+        </nav>
+      </footer>
+    </main>
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="false"></div>
+    <script type="module" src="dist/options.js"></script>
+  </body>
+</html>
