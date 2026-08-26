@@ -1,4 +1,4 @@
-# Tab Group Lazy Restore
+<h1 align="center">Tab Group Lazy Restore</h1>
 
 <p align="center">
   English · <a href="README.zh-CN.md">Simplified Chinese</a>
@@ -9,6 +9,13 @@ Ever reopened a saved Chrome Tab Group and watched your memory usage explode? Yo
 Restore that group, and Chrome may wake up and load every tab at once. A group with 30–40 tabs can suddenly consume 5–6 GB of memory, even if you only wanted to resume one page.
 
 Closing the tabs solves the memory problem, but defeats the purpose of saving the group. Keeping them all loaded makes every restore expensive. Tab Group Lazy Restore bridges that gap.
+
+## Installation
+
+1. Download the ZIP package from the [latest release](https://github.com/QXiaoLingShang/chrome-tab-group-lazy-restore/releases).
+2. Extract the ZIP file.
+3. Open `chrome://extensions/` in Chrome and enable **Developer mode**.
+4. Click **Load unpacked** and select the extracted folder containing `manifest.json`.
 
 ## How It Works
 
@@ -35,10 +42,3 @@ better_group/
 │   └── types.ts        # Shared TypeScript types
 └── dist/               # Generated extension files
 ```
-
-## Installation
-
-1. Download the ZIP package from the [latest release](https://github.com/QXiaoLingShang/chrome-tab-group-lazy-restore/releases).
-2. Extract the ZIP file.
-3. Open `chrome://extensions/` in Chrome and enable **Developer mode**.
-4. Click **Load unpacked** and select the extracted folder containing `manifest.json`.

@@ -1,4 +1,4 @@
-# Tab Group Lazy Restore
+<h1 align="center">Tab Group Lazy Restore</h1>
 
 <p align="center">
   <a href="README.md">English</a> · 简体中文
