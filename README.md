@@ -17,6 +17,15 @@ Closing the tabs solves the memory problem, but defeats the purpose of saving th
 3. Open `chrome://extensions/` in Chrome and enable **Developer mode**.
 4. Click **Load unpacked** and select the extracted folder containing `manifest.json`.
 
+## Configuration
+
+Open `chrome://extensions/`, click **Details** for the extension, and select **Extension options**.
+
+- **Minimum tabs**: Groups with this many Tabs or fewer are loaded normally. The default is `5`.
+- **Group allowlist**: Add titles in the final input row. Press Enter or leave the field to confirm an entry. Groups whose title exactly matches an entry are loaded normally.
+
+Settings are stored locally in Chrome and take effect on the next Group restore. No rebuild is required after changing them.
+
 ## How It Works
 
 When Chrome restores a saved group, Tab Group Lazy Restore watches for the burst of tabs created during the restore and handles them one at a time:
@@ -32,13 +41,22 @@ Nothing is deleted, and existing tabs are never scanned. Pinned tabs, tabs playi
 ```text
 better_group/
 ├── manifest.json
+├── options.html        # Extension settings page
 ├── package.json
 ├── pnpm-lock.yaml
 ├── tsconfig.json
 ├── src/
 │   ├── background.ts   # Service worker event entry point
+│   ├── config.ts        # Restore settings and storage loading
 │   ├── group.ts        # Restore-batch tracking and tab inspection
 │   ├── discard.ts      # Global serial discard queue
+│   ├── options.ts       # Settings page logic
 │   └── types.ts        # Shared TypeScript types
 └── dist/               # Generated extension files
 ```
+
+## License
+
+Unless otherwise noted, the original source code, documentation, and artwork in this repository are licensed under the [MIT License](LICENSE).
+
+You may use, modify, distribute, and sell the Software, provided that the copyright notice and license notice are included. Third-party dependencies and materials retain their own licenses.

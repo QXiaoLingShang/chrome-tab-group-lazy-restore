@@ -17,6 +17,15 @@
 3. 在 Chrome 中打开 `chrome://extensions/`，启用**开发者模式**。
 4. 点击**加载已解压的扩展程序（Load unpacked）**，选择包含 `manifest.json` 的解压文件夹。
 
+## 配置
+
+打开 `chrome://extensions/`，点击扩展的**详细信息**，然后选择**扩展程序选项（Extension options）**。
+
+- **最小标签页数量**：Tab 数量小于或等于该值的 Group 正常全部加载，默认值为 `5`。
+- **Group 白名单**：在最后一行输入标题，按 Enter 或离开输入框后确认。标题完全匹配的 Group 正常全部加载。
+
+配置会保存在 Chrome 本地，并在下一次恢复 Group 时生效。修改后不需要重新构建扩展。
+
 ## 原理
 
 Tab Group Lazy Restore 会在 Group 恢复时识别短时间内创建的同一批 Tab，然后按顺序处理：
@@ -32,13 +41,22 @@ Tab Group Lazy Restore 会在 Group 恢复时识别短时间内创建的同一�
 ```text
 better_group/
 ├── manifest.json
+├── options.html        # 扩展设置页面
 ├── package.json
 ├── pnpm-lock.yaml
 ├── tsconfig.json
 ├── src/
 │   ├── background.ts   # Chrome Tab 事件入口
+│   ├── config.ts        # 恢复设置和存储读取
 │   ├── group.ts        # Group 恢复批次和 Tab 检查
 │   ├── discard.ts      # 全局串行 discard 队列
+│   ├── options.ts       # 设置页面逻辑
 │   └── types.ts        # 共享类型
 └── dist/               # 构建生成的扩展脚本
 ```
+
+## 许可证
+
+除非另有说明，本仓库中的原创源码、文档和图像素材均采用 [MIT License](LICENSE) 许可证。
+
+你可以使用、修改、分发和销售本软件，但必须保留版权声明和许可证声明。第三方依赖和第三方素材仍受其各自许可证约束。
