@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tab Group Lazy Restore",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Reduce memory spikes when restoring Saved Tab Groups.",
   "permissions": ["tabs", "tabGroups", "storage"],
   "background": {
