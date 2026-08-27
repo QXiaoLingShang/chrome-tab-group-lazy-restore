@@ -27,6 +27,9 @@ const groupTitleEntry = requiredElement<HTMLDivElement>("#title-entry");
 const addTitleButton = requiredElement<HTMLButtonElement>("#add-title-button");
 const settingsResetButton = requiredElement<HTMLButtonElement>("#reset-button");
 const settingsToastRegion = requiredElement<HTMLDivElement>("#toast-region");
+const saveStatus = requiredElement<HTMLSpanElement>("#save-status");
+const minTabsError = requiredElement<HTMLParagraphElement>("#min-tabs-error");
+const titleEntryError = requiredElement<HTMLParagraphElement>("#title-entry-error");
 const advancedFields: Record<keyof AdvancedConfig, HTMLInputElement> = {
   restoreWindowMs: requiredElement<HTMLInputElement>("#advanced-restore-window"),
   recentTabCleanupPaddingMs: requiredElement<HTMLInputElement>("#advanced-cleanup-padding"),
@@ -48,6 +51,16 @@ const advancedLabels: Record<keyof AdvancedConfig, string> = {
   maxConcurrentDiscards: "Discard concurrency"
 };
 const advancedKeys = Object.keys(advancedFields) as Array<keyof AdvancedConfig>;
+const advancedErrors: Record<keyof AdvancedConfig, HTMLSpanElement> = {
+  restoreWindowMs: requiredElement<HTMLSpanElement>("#advanced-restore-window-error"),
+  recentTabCleanupPaddingMs: requiredElement<HTMLSpanElement>("#advanced-cleanup-padding-error"),
+  inspectionDelayMs: requiredElement<HTMLSpanElement>("#advanced-inspection-delay-error"),
+  batchTtlMs: requiredElement<HTMLSpanElement>("#advanced-batch-ttl-error"),
+  discardGapMs: requiredElement<HTMLSpanElement>("#advanced-discard-gap-error"),
+  retryDelayMs: requiredElement<HTMLSpanElement>("#advanced-retry-delay-error"),
+  maxDiscardRetries: requiredElement<HTMLSpanElement>("#advanced-max-retries-error"),
+  maxConcurrentDiscards: requiredElement<HTMLSpanElement>("#advanced-concurrency-error")
+};
 
 let excludedGroupTitles: string[] = [];
 const MAX_VISIBLE_TITLE_ROWS = 5;
@@ -56,8 +69,53 @@ const TITLE_LIST_LABELS = {
   less: "Show less groups"
 } as const;
 let saveTimer: number | null = null;
+let saveStatusTimer: number | null = null;
 
-/** Show a temporary notification in the top toast queue. */
+function setSaveStatus(
+  message: string,
+  state: "saving" | "saved" | "error" | "" = ""
+): void {
+  if (saveStatusTimer !== null) {
+    window.clearTimeout(saveStatusTimer);
+    saveStatusTimer = null;
+  }
+
+  saveStatus.textContent = message;
+  saveStatus.className = state ? `save-status is-${state}` : "save-status";
+
+  if (state === "saved") {
+    saveStatusTimer = window.setTimeout(() => {
+      saveStatus.textContent = "";
+      saveStatus.className = "save-status";
+      saveStatusTimer = null;
+    }, 1800);
+  }
+}
+
+function setFieldError(
+  field: HTMLInputElement,
+  errorElement: HTMLElement,
+  message: string
+): void {
+  errorElement.textContent = message;
+  errorElement.hidden = !message;
+  if (message) {
+    field.setAttribute("aria-invalid", "true");
+  } else {
+    field.removeAttribute("aria-invalid");
+  }
+}
+
+function clearValidationMessages(): void {
+  setFieldError(minTabsField, minTabsError, "");
+  titleEntryError.textContent = "";
+  titleEntryError.hidden = true;
+  for (const key of advancedKeys) {
+    setFieldError(advancedFields[key], advancedErrors[key], "");
+  }
+}
+
+/** Show a temporary notification in the toast region. */
 function showToast(
   message: string,
   type: "success" | "error" | "pending" = "pending"
@@ -122,6 +180,7 @@ function scheduleSave(): void {
     window.clearTimeout(saveTimer);
   }
 
+  setSaveStatus("Saving…", "saving");
   // Use a short debounce after removing the Save button to reduce frequent storage writes.
   saveTimer = window.setTimeout(() => {
     saveTimer = null;
@@ -224,16 +283,20 @@ function renderExcludedTitles(focusLast = false, collapseLongList = false): void
     }
 
     if (excludedGroupTitles.includes(value)) {
-      showToast("This group is already on the allowlist.", "error");
+      setFieldError(emptyInput, titleEntryError, "This group is already on the allowlist.");
       return;
     }
 
+    setFieldError(emptyInput, titleEntryError, "");
     hasCommitted = true;
     excludedGroupTitles.push(value);
     renderExcludedTitles(focusNext);
     scheduleSave();
   };
 
+  emptyInput.addEventListener("input", () => {
+    setFieldError(emptyInput, titleEntryError, "");
+  });
   emptyInput.addEventListener("change", () => commitEmptyInput());
   emptyInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
@@ -265,6 +328,8 @@ addTitleButton.addEventListener("click", () => {
 
 /** Fill the options page with a restore configuration. */
 function fillForm(config: RestoreConfig, collapseLongList = false): void {
+  clearValidationMessages();
+  setSaveStatus("");
   minTabsField.value = String(config.minTabs);
   waitForTitleField.checked = config.waitForTitleBeforeDiscard;
   for (const key of advancedKeys) {
@@ -282,13 +347,16 @@ function readAdvancedConfig(): AdvancedConfig | null {
     const value = Number(advancedFields[key].value);
     const limits = ADVANCED_CONFIG_LIMITS[key];
     if (!Number.isInteger(value) || value < limits.min || value > limits.max) {
-      showToast(
-        `${advancedLabels[key]} must be an integer between ${limits.min} and ${limits.max}.`,
-        "error"
+      setFieldError(
+        advancedFields[key],
+        advancedErrors[key],
+        `${advancedLabels[key]} must be an integer between ${limits.min} and ${limits.max}.`
       );
+      setSaveStatus("Fix the highlighted field.", "error");
       advancedFields[key].focus();
       return null;
     }
+    setFieldError(advancedFields[key], advancedErrors[key], "");
     values[key] = value;
   }
 
@@ -311,10 +379,12 @@ async function loadSettings(): Promise<void> {
 async function saveSettings(): Promise<void> {
   const minTabs = Number(minTabsField.value);
   if (!Number.isInteger(minTabs) || minTabs < 0) {
-    showToast("Minimum tab count must be a non-negative integer.", "error");
+    setFieldError(minTabsField, minTabsError, "Minimum tab count must be a non-negative integer.");
+    setSaveStatus("Fix the highlighted field.", "error");
     minTabsField.focus();
     return;
   }
+  setFieldError(minTabsField, minTabsError, "");
 
   const advanced = readAdvancedConfig();
   if (advanced === null) {
@@ -338,7 +408,9 @@ async function saveSettings(): Promise<void> {
 
   try {
     await chrome.storage.local.set(config);
+    setSaveStatus("Saved", "saved");
   } catch {
+    setSaveStatus("Unable to save", "error");
     showToast("Unable to save settings automatically.", "error");
   }
 }
@@ -348,10 +420,13 @@ async function resetSettings(): Promise<void> {
   try {
     // Cancel the pending auto-save before reset so stale values cannot overwrite defaults.
     cancelScheduledSave();
+    setSaveStatus("Saving…", "saving");
     await chrome.storage.local.set(DEFAULT_RESTORE_CONFIG);
     fillForm(DEFAULT_RESTORE_CONFIG);
+    setSaveStatus("Saved", "saved");
     showToast("Defaults restored.", "success");
   } catch {
+    setSaveStatus("Unable to save", "error");
     showToast("Unable to restore defaults.", "error");
   }
 }
@@ -363,6 +438,16 @@ async function resetSettings(): Promise<void> {
 ].forEach((field) => {
   field.addEventListener("change", scheduleSave);
 });
+
+minTabsField.addEventListener("input", () => {
+  setFieldError(minTabsField, minTabsError, "");
+});
+
+for (const key of advancedKeys) {
+  advancedFields[key].addEventListener("input", () => {
+    setFieldError(advancedFields[key], advancedErrors[key], "");
+  });
+}
 
 settingsForm.addEventListener("submit", (event) => {
   event.preventDefault();

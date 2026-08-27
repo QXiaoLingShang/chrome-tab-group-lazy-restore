@@ -17,8 +17,10 @@
         --danger-color: #d93025;
         --success-color: #188038;
         --hover-background: #f8fafd;
-        --toast-background: rgb(60 64 67 / 90%);
-        --toast-text: #ffffff;
+        --toast-background: #ffffff;
+        --toast-text: #202124;
+        --toast-shadow: 0 3px 8px rgb(32 33 36 / 18%);
+        --toast-hover-shadow: 0 6px 16px rgb(32 33 36 / 24%);
       }
 
       * {
@@ -59,6 +61,43 @@
         flex: 0 0 auto;
         margin-left: auto;
         white-space: nowrap;
+      }
+
+      .header-copy {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .save-status {
+        display: block;
+        height: 16px;
+        margin-top: 3px;
+        color: var(--secondary-text);
+        font-size: 12px;
+        line-height: 16px;
+      }
+
+      .save-status:empty {
+        visibility: hidden;
+      }
+
+      .save-status.is-saved {
+        color: var(--success-color);
+      }
+
+      .save-status.is-error,
+      .field-error {
+        color: var(--danger-color);
+      }
+
+      .field-error {
+        margin-top: 6px;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .setting-error {
+        margin-left: 44px;
       }
 
       .setting-icon {
@@ -111,6 +150,7 @@
         grid-template-columns: 28px minmax(0, 1fr) auto;
         align-items: center;
         gap: 16px;
+        cursor: text;
       }
 
       h2 {
@@ -118,11 +158,22 @@
         font-weight: 500;
       }
 
+      .setting-title {
+        display: block;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
       .setting-subtitle {
+        display: block;
         margin-top: 5px;
         color: var(--secondary-text);
         font-size: 13px;
         line-height: 1.45;
+      }
+
+      .setting-copy {
+        display: block;
       }
 
       input,
@@ -273,6 +324,7 @@
         align-items: center;
         gap: 16px;
         padding: 12px 0;
+        cursor: text;
       }
 
       .advanced-label {
@@ -286,6 +338,11 @@
         color: var(--secondary-text);
         font-size: 12px;
         line-height: 1.45;
+      }
+
+      .advanced-error {
+        grid-column: 1 / -1;
+        margin-top: -4px;
       }
 
       .setting-body {
@@ -302,6 +359,10 @@
 
       .allowlist-editor .title-entry {
         margin-top: 10px;
+      }
+
+      .title-entry-error {
+        margin: 6px 0 0 38px;
       }
 
       .title-list-shell {
@@ -512,14 +573,13 @@
 
       .toast-region {
         position: fixed;
-        top: 16px;
-        left: 50%;
+        right: 16px;
+        bottom: max(16px, env(safe-area-inset-bottom));
         z-index: 10;
         display: flex;
         width: min(420px, calc(100% - 32px));
         flex-direction: column;
         gap: 8px;
-        transform: translateX(-50%);
         pointer-events: none;
       }
 
@@ -531,7 +591,7 @@
         border-left: 4px solid var(--google-blue);
         background: var(--toast-background);
         backdrop-filter: blur(6px);
-        box-shadow: 0 3px 8px rgb(0 0 0 / 20%);
+        box-shadow: var(--toast-shadow);
         color: var(--toast-text);
         font-size: 13px;
         line-height: 1.4;
@@ -541,7 +601,7 @@
       }
 
       .toast:hover {
-        box-shadow: 0 6px 16px rgb(0 0 0 / 34%);
+        box-shadow: var(--toast-hover-shadow);
         transform: translateY(-1px);
       }
 
@@ -588,7 +648,7 @@
       @keyframes toast-in {
         from {
           opacity: 0;
-          transform: translateY(-8px);
+          transform: translateY(8px);
         }
         to {
           opacity: 1;
@@ -603,7 +663,7 @@
         }
         to {
           opacity: 0;
-          transform: translateY(-8px);
+          transform: translateY(8px);
         }
       }
 
@@ -664,6 +724,10 @@
           margin-left: 40px;
         }
 
+        .setting-error {
+          margin-left: 40px;
+        }
+
         .advanced-content {
           margin-left: 40px;
         }
@@ -677,6 +741,12 @@
           padding: 0 10px;
           font-size: 12px;
         }
+
+        .toast-region {
+          right: 16px;
+          left: 16px;
+          width: auto;
+        }
       }
 
       @media (prefers-color-scheme: dark) {
@@ -687,7 +757,10 @@
           --line-color: #3c4043;
           --strong-line: #9aa0a6;
           --hover-background: #292a2d;
-          --toast-background: rgb(48 49 52 / 90%);
+          --toast-background: rgb(48 49 52 / 94%);
+          --toast-text: #f1f3f4;
+          --toast-shadow: 0 3px 8px rgb(0 0 0 / 28%);
+          --toast-hover-shadow: 0 6px 16px rgb(0 0 0 / 42%);
         }
       }
     </style>
@@ -696,23 +769,27 @@
     <main>
       <header class="page-header">
         <img class="header-icon" src="icons/icon48.png" alt="" />
-        <h1>Tab Group Restore Settings</h1>
+        <div class="header-copy">
+          <h1>Tab Group Restore Settings</h1>
+          <span class="save-status" id="save-status" role="status" aria-live="polite"></span>
+        </div>
         <button class="secondary header-reset" id="reset-button" type="button">Restore defaults</button>
       </header>
 
       <form id="settings-form">
         <section class="setting" aria-labelledby="restore-heading">
-          <div class="setting-heading">
+          <label class="setting-heading" for="min-tabs">
             <span class="setting-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <path d="M4 7h16M4 12h10M4 17h7" />
                 <path d="M18 15v6M15 18h6" />
               </svg>
             </span>
-            <div class="setting-copy">
-              <h2 id="restore-heading">Minimum tab count</h2>
-              <p class="setting-subtitle">Groups at or below this count skip discard.</p>
-            </div>
+            <span class="setting-copy">
+              <!-- fix: Match the Advanced rows by making the whole setting row focus its input. -->
+              <span class="setting-title" id="restore-heading" role="heading" aria-level="2">Minimum tab count</span>
+              <span class="setting-subtitle">Groups at or below this count skip discard.</span>
+            </span>
             <input
               class="strict-number-input"
               id="min-tabs"
@@ -721,8 +798,10 @@
               step="1"
               required
               aria-label="Minimum tab count"
+              aria-describedby="min-tabs-error"
             />
-          </div>
+          </label>
+          <p class="field-error setting-error" id="min-tabs-error" role="alert" hidden></p>
         </section>
 
         <section class="setting" aria-labelledby="title-wait-heading">
@@ -780,6 +859,7 @@
               <div id="title-list-shell" class="title-list-shell">
                 <div id="title-list" class="title-list" role="list"></div>
                 <div id="title-entry" class="title-entry"></div>
+                <p class="field-error title-entry-error" id="title-entry-error" role="alert" hidden></p>
               </div>
             </div>
             <button id="title-list-toggle" class="title-list-toggle" type="button" hidden aria-expanded="false">
@@ -811,56 +891,64 @@
                 <span class="advanced-label">Restore detection window</span>
                 <span class="advanced-description">How long a new Tab can join the restore batch.</span>
               </span>
-              <input class="strict-number-input" id="advanced-restore-window" type="number" min="1000" max="60000" step="100" required />
+              <input class="strict-number-input" id="advanced-restore-window" type="number" min="1000" max="60000" step="100" required aria-describedby="advanced-restore-window-error" />
+              <span class="field-error advanced-error" id="advanced-restore-window-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-cleanup-padding">
               <span>
                 <span class="advanced-label">Detection cleanup margin</span>
                 <span class="advanced-description">Extra time before stale new-Tab tracking is removed.</span>
               </span>
-              <input class="strict-number-input" id="advanced-cleanup-padding" type="number" min="0" max="10000" step="100" required />
+              <input class="strict-number-input" id="advanced-cleanup-padding" type="number" min="0" max="10000" step="100" required aria-describedby="advanced-cleanup-padding-error" />
+              <span class="field-error advanced-error" id="advanced-cleanup-padding-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-inspection-delay">
               <span>
                 <span class="advanced-label">Group inspection delay</span>
                 <span class="advanced-description">Debounce time that lets a restored Group finish assembling.</span>
               </span>
-              <input class="strict-number-input" id="advanced-inspection-delay" type="number" min="0" max="5000" step="50" required />
+              <input class="strict-number-input" id="advanced-inspection-delay" type="number" min="0" max="5000" step="50" required aria-describedby="advanced-inspection-delay-error" />
+              <span class="field-error advanced-error" id="advanced-inspection-delay-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-batch-ttl">
               <span>
                 <span class="advanced-label">Restore batch lifetime</span>
                 <span class="advanced-description">Maximum time title waiting can delay discard.</span>
               </span>
-              <input class="strict-number-input" id="advanced-batch-ttl" type="number" min="1000" max="120000" step="100" required />
+              <input class="strict-number-input" id="advanced-batch-ttl" type="number" min="1000" max="120000" step="100" required aria-describedby="advanced-batch-ttl-error" />
+              <span class="field-error advanced-error" id="advanced-batch-ttl-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-discard-gap">
               <span>
                 <span class="advanced-label">Discard start gap</span>
                 <span class="advanced-description">Pause before starting another discard worker.</span>
               </span>
-              <input class="strict-number-input" id="advanced-discard-gap" type="number" min="0" max="1000" step="10" required />
+              <input class="strict-number-input" id="advanced-discard-gap" type="number" min="0" max="1000" step="10" required aria-describedby="advanced-discard-gap-error" />
+              <span class="field-error advanced-error" id="advanced-discard-gap-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-retry-delay">
               <span>
                 <span class="advanced-label">Retry delay</span>
                 <span class="advanced-description">Delay between title checks and transient discard retries.</span>
               </span>
-              <input class="strict-number-input" id="advanced-retry-delay" type="number" min="50" max="5000" step="50" required />
+              <input class="strict-number-input" id="advanced-retry-delay" type="number" min="50" max="5000" step="50" required aria-describedby="advanced-retry-delay-error" />
+              <span class="field-error advanced-error" id="advanced-retry-delay-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-max-retries">
               <span>
                 <span class="advanced-label">Maximum discard retries</span>
                 <span class="advanced-description">How many times a failed discard API call is retried.</span>
               </span>
-              <input class="strict-number-input" id="advanced-max-retries" type="number" min="0" max="20" step="1" required />
+              <input class="strict-number-input" id="advanced-max-retries" type="number" min="0" max="20" step="1" required aria-describedby="advanced-max-retries-error" />
+              <span class="field-error advanced-error" id="advanced-max-retries-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-concurrency">
               <span>
                 <span class="advanced-label">Discard concurrency</span>
                 <span class="advanced-description">Maximum number of discard operations in flight at once.</span>
               </span>
-              <input class="strict-number-input" id="advanced-concurrency" type="number" min="1" max="8" step="1" required />
+              <input class="strict-number-input" id="advanced-concurrency" type="number" min="1" max="8" step="1" required aria-describedby="advanced-concurrency-error" />
+              <span class="field-error advanced-error" id="advanced-concurrency-error" role="alert" hidden></span>
             </label>
           </div>
         </details>
