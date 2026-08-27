@@ -1,4 +1,4 @@
-/** Service-worker entry point that wires Chrome tab events to the Group logic. */
+/** Service-worker entry point that wires Chrome Tab events to Group logic. */
 import {
   detectGroup,
   getBatch,
@@ -6,25 +6,41 @@ import {
   scheduleInspection,
   trackNewTab
 } from "./group.js";
+import {
+  notifyTitleUpdated
+} from "./discard.js";
 import type { Tab } from "./types.js";
 
 chrome.tabs.onCreated.addListener(trackNewTab);
 
-/** Handle Group and URL updates for tracked restore batches. */
+/** Handle Group, title, and URL updates for tracked restore batches. */
 function handleTabUpdated(
   _tabId: number,
-  changeInfo: { groupId?: number; url?: string },
+  changeInfo: { groupId?: number; title?: string; url?: string },
   tab: Tab
 ): void {
   if (changeInfo.groupId !== undefined) {
     detectGroup(tab);
   }
 
-  if (changeInfo.groupId === undefined && changeInfo.url === undefined) {
+  const batch = getBatch(tab.windowId, tab.groupId ?? -1);
+
+  // fix: Wake the queue only when Chrome reports a title change and the batch enables title waiting.
+  if (
+    changeInfo.title !== undefined &&
+    tab.id !== undefined &&
+    batch?.waitForTitleBeforeDiscard
+  ) {
+    notifyTitleUpdated(tab.id, batch);
+  }
+
+  if (
+    changeInfo.groupId === undefined &&
+    changeInfo.url === undefined
+  ) {
     return;
   }
 
-  const batch = getBatch(tab.windowId, tab.groupId ?? -1);
   if (batch) {
     scheduleInspection(batch);
   }
@@ -32,7 +48,7 @@ function handleTabUpdated(
 
 chrome.tabs.onUpdated.addListener(handleTabUpdated);
 
-/** Protect a tracked tab when Chrome reports an activation. */
+/** Protect the active Tab when Chrome reports an activation. */
 function handleTabActivated({ tabId, windowId }: { tabId: number; windowId: number }): void {
   const batch = getBatchByTab(windowId, tabId);
   if (!batch) {

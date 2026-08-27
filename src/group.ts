@@ -1,21 +1,21 @@
-/** Tracks recently created tabs and short-lived Group restore batches. */
+/** Track recently created Tabs and short-lived Group restore batches. */
 import { loadRestoreConfig } from "./config.js";
 import { enqueueDiscard, isDiscardable } from "./discard.js";
+import { getAdvancedConfig } from "./advanced-config.js";
 import type { GroupBatch, RecentTab, Tab, TabId } from "./types.js";
-
-const RESTORE_WINDOW_MS = 5000;
-const INSPECTION_DELAY_MS = 300;
-const BATCH_TTL_MS = 15000;
 
 const recentTabs = new Map<TabId, RecentTab>();
 const batches = new Map<string, GroupBatch>();
+
+// Load persisted tuning values early so the first restore event does not use defaults.
+void loadRestoreConfig();
 
 /** Find the active restore batch for a window and Group. */
 export function getBatch(windowId: number, groupId: number): GroupBatch | undefined {
   return batches.get(`${windowId}:${groupId}`);
 }
 
-/** Find the restore batch that owns a tracked tab. */
+/** Find the restore batch that owns a tracked Tab. */
 export function getBatchByTab(windowId: number, tabId: TabId): GroupBatch | undefined {
   for (const batch of batches.values()) {
     if (batch.windowId === windowId && batch.tabIds.has(tabId)) {
@@ -25,7 +25,7 @@ export function getBatchByTab(windowId: number, tabId: TabId): GroupBatch | unde
   return undefined;
 }
 
-/** Remember a newly created tab as a possible restore candidate. */
+/** Remember a newly created Tab as a possible restore candidate. */
 export function trackNewTab(tab: Tab): void {
   if (tab.id === undefined) {
     return;
@@ -39,13 +39,16 @@ export function trackNewTab(tab: Tab): void {
 
   setTimeout(() => {
     const recent = recentTabs.get(tabId);
-    if (recent && Date.now() - recent.createdAt >= RESTORE_WINDOW_MS) {
+    if (recent && Date.now() - recent.createdAt >= getAdvancedConfig().restoreWindowMs) {
       recentTabs.delete(tabId);
     }
-  }, RESTORE_WINDOW_MS + 100);
+  },
+    getAdvancedConfig().restoreWindowMs +
+      getAdvancedConfig().recentTabCleanupPaddingMs
+  );
 }
 
-/** Debounce inspection so a restored Group can finish assembling. */
+/** Debounce inspection so a restoring Group can finish assembling. */
 export function scheduleInspection(batch: GroupBatch): void {
   if (batch.inspectTimer !== null) {
     clearTimeout(batch.inspectTimer);
@@ -54,10 +57,10 @@ export function scheduleInspection(batch: GroupBatch): void {
   batch.inspectTimer = setTimeout(() => {
     batch.inspectTimer = null;
     void inspectGroup(batch);
-  }, INSPECTION_DELAY_MS);
+  }, getAdvancedConfig().inspectionDelayMs);
 }
 
-/** Associate a recently created tab with the Group it joined. */
+/** Associate a recently created Tab with the Group it joined. */
 export function detectGroup(tab: Tab): void {
   const tabId = tab.id;
   const groupId = tab.groupId ?? -1;
@@ -68,7 +71,7 @@ export function detectGroup(tab: Tab): void {
     !recent ||
     recent.initialGroupId !== -1 ||
     groupId === -1 ||
-    Date.now() - recent.createdAt > RESTORE_WINDOW_MS
+    Date.now() - recent.createdAt > getAdvancedConfig().restoreWindowMs
   ) {
     return;
   }
@@ -96,9 +99,11 @@ function createBatch(
     windowId,
     groupId,
     tabIds: new Set<TabId>(),
+    titleUpdatedTabIds: new Set<TabId>(),
     protectedTabId: null,
-    queuedTabIds: new Set<TabId>(),
-    inspectTimer: null
+    inspectTimer: null,
+    waitForTitleBeforeDiscard: false,
+    deadline: Date.now() + getAdvancedConfig().batchTtlMs
   };
 
   batches.set(groupBatchKey, batch);
@@ -107,12 +112,12 @@ function createBatch(
       clearTimeout(batch.inspectTimer);
     }
     batches.delete(groupBatchKey);
-  }, BATCH_TTL_MS);
+  }, getAdvancedConfig().batchTtlMs);
 
   return batch;
 }
 
-/** Inspect the Group and queue its safe background tabs for discard. */
+/** Inspect the Group and queue its safe background Tabs for discard. */
 async function inspectGroup(batch: GroupBatch): Promise<void> {
   let groupTabs: Tab[];
 
@@ -130,12 +135,14 @@ async function inspectGroup(batch: GroupBatch): Promise<void> {
     return;
   }
 
-  // Skip discard for small Groups.
+  batch.waitForTitleBeforeDiscard = restoreConfig.waitForTitleBeforeDiscard;
+
+  // Preserve the existing behavior by skipping discard for small Groups.
   if (groupTabs.length <= restoreConfig.minTabs) {
     return;
   }
 
-  // Skip discard for Groups on the exclusion list.
+  // Groups on the allowlist skip discard.
   try {
     const group = await chrome.tabGroups.get(batch.groupId);
     if (
@@ -161,5 +168,6 @@ async function inspectGroup(batch: GroupBatch): Promise<void> {
     return;
   }
 
-  enqueueDiscard(batch, trackedTabs.filter((tab) => isDiscardable(tab, batch)));
+  const discardableTabs = trackedTabs.filter((tab) => isDiscardable(tab, batch));
+  enqueueDiscard(batch, discardableTabs);
 }

@@ -17,7 +17,7 @@
         --danger-color: #d93025;
         --success-color: #188038;
         --hover-background: #f8fafd;
-        --toast-background: #3c4043;
+        --toast-background: rgb(60 64 67 / 90%);
         --toast-text: #ffffff;
       }
 
@@ -33,9 +33,12 @@
       }
 
       main {
+        display: flex;
+        min-height: 100vh;
         width: min(720px, 100%);
         margin: 0 auto;
         padding: 24px 32px 52px;
+        flex-direction: column;
       }
 
       h1,
@@ -52,9 +55,14 @@
         border-bottom: 1px solid var(--line-color);
       }
 
+      .header-reset {
+        flex: 0 0 auto;
+        margin-left: auto;
+        white-space: nowrap;
+      }
+
       .setting-icon {
         display: grid;
-        align-self: center;
         flex: 0 0 28px;
         width: 28px;
         height: 28px;
@@ -90,17 +98,12 @@
       }
 
       .setting {
-        display: block;
         padding: 18px 0 20px;
         border-bottom: 1px solid var(--line-color);
       }
 
       .setting + .setting {
         padding-top: 18px;
-      }
-
-      .setting-icon {
-        align-self: center;
       }
 
       .setting-heading {
@@ -140,27 +143,206 @@
         border-bottom: 2px solid var(--google-blue);
       }
 
-      #min-tabs {
+      .strict-number-input {
         width: 72px;
         padding: 0 6px;
         text-align: center;
         font-variant-numeric: tabular-nums;
+        appearance: textfield;
       }
 
-      #min-tabs::-webkit-inner-spin-button,
-      #min-tabs::-webkit-outer-spin-button {
+      .strict-number-input::-webkit-inner-spin-button,
+      .strict-number-input::-webkit-outer-spin-button {
         margin: 0;
         -webkit-appearance: none;
       }
 
-      #min-tabs {
-        appearance: textfield;
+      .switch {
+        /* Use a switch for experimental title waiting while keeping the native checkbox as the interaction target. */
+        position: relative;
+        display: inline-flex;
+        width: 40px;
+        height: 22px;
+      }
+
+      .toggle-input {
+        position: absolute;
+        z-index: 1;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 22px;
+        margin: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        opacity: 0;
+        appearance: none;
+      }
+
+      .switch-track {
+        position: absolute;
+        inset: 0;
+        border: 1px solid var(--strong-line);
+        border-radius: 11px;
+        background: var(--line-color);
+        transition: background 120ms ease, border-color 120ms ease;
+      }
+
+      .switch-track::before {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--page-background);
+        content: "";
+        transition: transform 120ms ease;
+      }
+
+      .toggle-input:checked + .switch-track {
+        border-color: var(--google-blue);
+        background: var(--google-blue);
+      }
+
+      .toggle-input:checked + .switch-track::before {
+        transform: translateX(18px);
+      }
+
+      .toggle-input:focus-visible + .switch-track {
+        outline: 2px solid var(--google-blue);
+        outline-offset: 2px;
+      }
+
+      .experimental-badge {
+        display: inline-block;
+        margin-left: 7px;
+        padding: 2px 5px;
+        border: 1px solid var(--strong-line);
+        color: var(--secondary-text);
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.04em;
+        vertical-align: 2px;
+      }
+
+      .warning-text {
+        margin: 8px 0 0 44px;
+        color: var(--danger-color);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .advanced-settings {
+        margin-top: 18px;
+      }
+
+      .advanced-summary {
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .advanced-summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .advanced-summary::after {
+        width: 8px;
+        height: 8px;
+        margin-right: 3px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        color: var(--secondary-text);
+        content: "";
+        transform: rotate(45deg) translateY(-2px);
+        transition: transform 120ms ease;
+      }
+
+      .advanced-settings[open] .advanced-summary::after {
+        transform: rotate(225deg) translate(-2px, -2px);
+      }
+
+      .advanced-content {
+        margin: 14px 0 0 44px;
+      }
+
+      .advanced-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 92px;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 0;
+      }
+
+      .advanced-label {
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .advanced-description {
+        display: block;
+        margin-top: 4px;
+        color: var(--secondary-text);
+        font-size: 12px;
+        line-height: 1.45;
       }
 
       .setting-body {
         min-width: 0;
         margin-top: 14px;
         margin-left: 44px;
+      }
+
+      .allowlist-editor {
+        margin-left: -30px;
+        padding-left: 28px;
+        border-left: 2px solid var(--line-color);
+      }
+
+      .allowlist-editor .title-entry {
+        margin-top: 10px;
+      }
+
+      .title-list-shell {
+        position: relative;
+      }
+
+      .title-list-shell.is-collapsed {
+        /* Collapse the entire shell so existing items, Add group, and the guide line are clipped together. */
+        overflow: hidden;
+        max-height: 200px;
+      }
+
+      .title-list-shell.is-collapsed::after {
+        /* fix: Extend the fade over the guide line so it cannot remain visible by itself. */
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: -30px;
+        height: 48px;
+        background: linear-gradient(to bottom, transparent, var(--page-background));
+        content: "";
+        pointer-events: none;
+      }
+
+      .title-list-toggle {
+        display: block;
+        min-height: 30px;
+        margin: 6px 0 0 auto;
+        padding: 0 4px;
+        border: 0;
+        color: var(--secondary-text);
+        font-size: 12px;
+      }
+
+      .title-list-toggle:hover:not(:disabled) {
+        background: transparent;
+        color: var(--google-blue);
+      }
+
+      .title-list-toggle[hidden] {
+        display: none;
       }
 
       .title-list {
@@ -190,8 +372,8 @@
         border-bottom: 1px solid var(--line-color);
       }
 
-      .title-input:focus {
-        border-bottom: 2px solid var(--google-blue);
+      .title-row .title-input {
+        border-bottom-color: transparent;
       }
 
       .title-entry {
@@ -232,6 +414,23 @@
         color: var(--danger-color);
       }
 
+      .add-title-button {
+        min-width: 28px;
+        min-height: 28px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--secondary-text);
+        font-size: 22px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .add-title-button:hover:not(:disabled) {
+        background: transparent;
+        color: var(--google-blue);
+      }
+
       button {
         min-height: 36px;
         padding: 0 14px;
@@ -258,21 +457,13 @@
         opacity: 0.42;
       }
 
-      .actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 18px;
-        padding-top: 20px;
-      }
-
       .page-footer {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-top: 32px;
-        padding-top: 14px;
+        margin-top: auto;
+        padding-top: 32px;
         border-top: 1px solid var(--line-color);
         color: var(--secondary-text);
         font-size: 12px;
@@ -319,18 +510,6 @@
         text-decoration: underline;
       }
 
-      @media (max-width: 560px) {
-        .page-footer {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-      }
-
-      .action-buttons {
-        display: flex;
-        gap: 10px;
-      }
-
       .toast-region {
         position: fixed;
         top: 16px;
@@ -345,14 +524,53 @@
       }
 
       .toast {
-        padding: 12px 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 12px 12px 16px;
         border-left: 4px solid var(--google-blue);
         background: var(--toast-background);
+        backdrop-filter: blur(6px);
         box-shadow: 0 3px 8px rgb(0 0 0 / 20%);
         color: var(--toast-text);
         font-size: 13px;
         line-height: 1.4;
         animation: toast-in 180ms ease-out;
+        pointer-events: auto;
+        transition: box-shadow 140ms ease, transform 140ms ease;
+      }
+
+      .toast:hover {
+        box-shadow: 0 6px 16px rgb(0 0 0 / 34%);
+        transform: translateY(-1px);
+      }
+
+      .toast-message {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .toast-close {
+        flex: 0 0 24px;
+        width: 24px;
+        min-width: 24px;
+        min-height: 24px;
+        margin: -4px -4px 0 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--toast-text);
+        cursor: pointer;
+        font-size: 20px;
+        font-weight: 400;
+        line-height: 1;
+        opacity: 0.78;
+      }
+
+      .toast-close:hover:not(:disabled) {
+        background: transparent;
+        color: var(--toast-text);
+        opacity: 1;
       }
 
       .toast.success {
@@ -401,6 +619,11 @@
       }
 
       @media (max-width: 560px) {
+        .page-footer {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
         main {
           padding: 20px 18px 44px;
         }
@@ -428,18 +651,31 @@
           margin-left: 40px;
         }
 
-        .actions {
-          align-items: stretch;
-          flex-direction: column;
+        .allowlist-editor {
+          margin-left: -27px;
+          padding-left: 25px;
         }
 
-        .action-buttons,
-        .action-buttons button {
-          width: 100%;
+        .title-list-shell.is-collapsed::after {
+          left: -27px;
         }
 
-        .action-buttons button {
-          flex: 1;
+        .warning-text {
+          margin-left: 40px;
+        }
+
+        .advanced-content {
+          margin-left: 40px;
+        }
+
+        .advanced-row {
+          grid-template-columns: minmax(0, 1fr) 76px;
+          gap: 10px;
+        }
+
+        .header-reset {
+          padding: 0 10px;
+          font-size: 12px;
         }
       }
 
@@ -451,7 +687,7 @@
           --line-color: #3c4043;
           --strong-line: #9aa0a6;
           --hover-background: #292a2d;
-          --toast-background: #303134;
+          --toast-background: rgb(48 49 52 / 90%);
         }
       }
     </style>
@@ -461,6 +697,7 @@
       <header class="page-header">
         <img class="header-icon" src="icons/icon48.png" alt="" />
         <h1>Tab Group Restore Settings</h1>
+        <button class="secondary header-reset" id="reset-button" type="button">Restore defaults</button>
       </header>
 
       <form id="settings-form">
@@ -477,6 +714,7 @@
               <p class="setting-subtitle">Groups at or below this count skip discard.</p>
             </div>
             <input
+              class="strict-number-input"
               id="min-tabs"
               type="number"
               min="0"
@@ -485,6 +723,34 @@
               aria-label="Minimum tab count"
             />
           </div>
+        </section>
+
+        <section class="setting" aria-labelledby="title-wait-heading">
+          <div class="setting-heading">
+            <span class="setting-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M12 8v4l2.5 2" />
+              </svg>
+            </span>
+            <div class="setting-copy">
+              <h2 id="title-wait-heading">
+                Wait for tab titles
+                <span class="experimental-badge">Experimental</span>
+              </h2>
+              <p class="setting-subtitle">
+                Wait for a title update before discarding that tab.
+              </p>
+            </div>
+            <label class="switch" aria-label="Wait for tab titles before discard">
+              <input class="toggle-input" id="wait-for-title" type="checkbox" />
+              <span class="switch-track" aria-hidden="true"></span>
+            </label>
+          </div>
+          <p class="warning-text">
+            <!-- This experimental feature may extend the memory peak while a Group is opening. -->
+            Experimental: this can prolong the high-memory period while a Group is opening, because Tabs wait longer before discard.
+          </p>
         </section>
 
         <section class="setting" aria-labelledby="excluded-heading">
@@ -499,19 +765,106 @@
               <h2 id="excluded-heading">Group allowlist</h2>
               <p class="setting-subtitle">Matching group titles skip discard.</p>
             </div>
+            <button
+              class="add-title-button"
+              id="add-title-button"
+              type="button"
+              aria-label="Add group to allowlist"
+            >
+              +
+            </button>
           </div>
           <div class="setting-body">
-            <div id="title-list" class="title-list" role="list"></div>
-            <div id="title-entry" class="title-entry"></div>
+            <!-- Keep Add group with the allowlist rows so the final entry stays inside the fade area. -->
+            <div class="allowlist-editor">
+              <div id="title-list-shell" class="title-list-shell">
+                <div id="title-list" class="title-list" role="list"></div>
+                <div id="title-entry" class="title-entry"></div>
+              </div>
+            </div>
+            <button id="title-list-toggle" class="title-list-toggle" type="button" hidden aria-expanded="false">
+              Show more groups
+            </button>
           </div>
         </section>
 
-        <div class="actions">
-          <div class="action-buttons">
-            <button class="secondary" id="reset-button" type="button">Restore defaults</button>
-            <button id="save-button" type="submit" disabled>Save settings</button>
+        <!-- These internal tuning controls are collapsed by default to keep the small options page compact. -->
+        <details class="setting advanced-settings">
+          <summary class="setting-heading advanced-summary">
+            <span class="setting-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" />
+                <circle cx="12" cy="12" r="3.5" />
+              </svg>
+            </span>
+            <div class="setting-copy">
+              <h2>Advanced settings</h2>
+              <p class="setting-subtitle">
+                Fine-tune restore timing, retries, and discard concurrency.
+              </p>
+            </div>
+          </summary>
+
+          <div class="advanced-content">
+            <label class="advanced-row" for="advanced-restore-window">
+              <span>
+                <span class="advanced-label">Restore detection window</span>
+                <span class="advanced-description">How long a new Tab can join the restore batch.</span>
+              </span>
+              <input class="strict-number-input" id="advanced-restore-window" type="number" min="1000" max="60000" step="100" required />
+            </label>
+            <label class="advanced-row" for="advanced-cleanup-padding">
+              <span>
+                <span class="advanced-label">Detection cleanup margin</span>
+                <span class="advanced-description">Extra time before stale new-Tab tracking is removed.</span>
+              </span>
+              <input class="strict-number-input" id="advanced-cleanup-padding" type="number" min="0" max="10000" step="100" required />
+            </label>
+            <label class="advanced-row" for="advanced-inspection-delay">
+              <span>
+                <span class="advanced-label">Group inspection delay</span>
+                <span class="advanced-description">Debounce time that lets a restored Group finish assembling.</span>
+              </span>
+              <input class="strict-number-input" id="advanced-inspection-delay" type="number" min="0" max="5000" step="50" required />
+            </label>
+            <label class="advanced-row" for="advanced-batch-ttl">
+              <span>
+                <span class="advanced-label">Restore batch lifetime</span>
+                <span class="advanced-description">Maximum time title waiting can delay discard.</span>
+              </span>
+              <input class="strict-number-input" id="advanced-batch-ttl" type="number" min="1000" max="120000" step="100" required />
+            </label>
+            <label class="advanced-row" for="advanced-discard-gap">
+              <span>
+                <span class="advanced-label">Discard start gap</span>
+                <span class="advanced-description">Pause before starting another discard worker.</span>
+              </span>
+              <input class="strict-number-input" id="advanced-discard-gap" type="number" min="0" max="1000" step="10" required />
+            </label>
+            <label class="advanced-row" for="advanced-retry-delay">
+              <span>
+                <span class="advanced-label">Retry delay</span>
+                <span class="advanced-description">Delay between title checks and transient discard retries.</span>
+              </span>
+              <input class="strict-number-input" id="advanced-retry-delay" type="number" min="50" max="5000" step="50" required />
+            </label>
+            <label class="advanced-row" for="advanced-max-retries">
+              <span>
+                <span class="advanced-label">Maximum discard retries</span>
+                <span class="advanced-description">How many times a failed discard API call is retried.</span>
+              </span>
+              <input class="strict-number-input" id="advanced-max-retries" type="number" min="0" max="20" step="1" required />
+            </label>
+            <label class="advanced-row" for="advanced-concurrency">
+              <span>
+                <span class="advanced-label">Discard concurrency</span>
+                <span class="advanced-description">Maximum number of discard operations in flight at once.</span>
+              </span>
+              <input class="strict-number-input" id="advanced-concurrency" type="number" min="1" max="8" step="1" required />
+            </label>
           </div>
-        </div>
+        </details>
+
       </form>
 
       <footer class="page-footer">
