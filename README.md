@@ -23,7 +23,7 @@ Open `chrome://extensions/`, click **Details** for the extension, and select **E
 
 - **Advanced settings** is collapsed by default. Expand it to tune restore detection, inspection delay, title-wait lifetime, retry behavior, and discard concurrency. These are internal controls; unusual values may increase restore latency or browser pressure.
 - **Minimum tabs**: Groups with this many Tabs or fewer are loaded normally. The default is `5`.
-- **Group allowlist**: Add titles in the final input row. Press Enter or leave the field to confirm an entry. Groups whose title exactly matches an entry are loaded normally.
+- **Group name allowlist**: Add group names in the final input row. Press Enter or leave the field to confirm an entry. Tabs in groups whose names exactly match an entry are not discarded.
 - **Wait for tab titles (Experimental)**: When enabled, wait for a title update event before discarding an individual tab. Tabs that never receive the event are discarded when the restore wait deadline expires. Disabled by default. This can prolong the high-memory period while a Group is opening.
 
 Settings are stored locally in Chrome and take effect on the next Group restore. No rebuild is required after changing them.
