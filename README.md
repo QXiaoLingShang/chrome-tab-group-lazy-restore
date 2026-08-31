@@ -52,14 +52,14 @@ better_group/
 ├── pnpm-lock.yaml
 ├── tsconfig.json
 ├── src/
-│   ├── background.ts   # Service worker event entry point
+│   ├── background.ts      # Service worker event entry point
 │   ├── advanced-config.ts # Internal tuning constants
-│   ├── config.ts        # Restore settings and storage loading
-│   ├── group.ts        # Restore-batch tracking and tab inspection
-│   ├── discard.ts      # Bounded-concurrency discard queue
-│   ├── options.ts       # Settings page logic
-│   └── types.ts        # Shared TypeScript types
-└── dist/               # Generated extension files
+│   ├── config.ts          # Restore settings and storage loading
+│   ├── group.ts           # Restore-batch tracking and tab inspection
+│   ├── discard.ts         # Bounded-concurrency discard queue
+│   ├── options.ts         # Settings page logic
+│   └── types.ts           # Shared TypeScript types
+└── dist/
 ```
 
 ## License
