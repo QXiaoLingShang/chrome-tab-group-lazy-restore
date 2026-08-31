@@ -814,8 +814,8 @@
             </span>
             <span class="setting-copy">
               <!-- fix: Match the Advanced rows by making the whole setting row focus its input. -->
-              <span class="setting-title" id="restore-heading" role="heading" aria-level="2" data-i18n="minimumTabCount">Minimum tab count</span>
-              <span class="setting-subtitle" data-i18n="minimumTabCountDescription">Groups at or below this count skip discard.</span>
+              <span class="setting-title" id="restore-heading" role="heading" aria-level="2" data-i18n="minimumTabCount">Minimum number of tabs</span>
+              <span class="setting-subtitle" data-i18n="minimumTabCountDescription">Groups with this number of tabs or fewer won't be discarded.</span>
             </span>
             <input
               class="strict-number-input"
@@ -841,11 +841,11 @@
             </span>
             <div class="setting-copy">
               <h2 id="title-wait-heading">
-                <span data-i18n="waitForTabTitles">Wait for tab titles</span>
+                <span data-i18n="waitForTabTitles">Wait for tab titles before discarding</span>
                 <span class="experimental-badge" data-i18n="experimental">Experimental</span>
               </h2>
               <p class="setting-subtitle">
-                <span data-i18n="waitForTabTitlesDescription">Wait for a title update before discarding that tab.</span>
+                <span data-i18n="waitForTabTitlesDescription">Wait for a tab's title to load before discarding it.</span>
               </p>
             </div>
             <label class="switch" data-i18n-aria-label="waitForTabTitlesAriaLabel">
@@ -855,7 +855,7 @@
           </div>
           <p class="warning-text">
             <!-- This experimental feature may extend the memory peak while a Group is opening. -->
-            <span data-i18n="waitForTabTitlesWarning">Experimental: this can prolong the high-memory period while a Group is opening, because Tabs wait longer before discard.</span>
+            <span data-i18n="waitForTabTitlesWarning">Experimental: This may keep memory usage high for longer while a group is opening.</span>
           </p>
         </section>
 
@@ -868,9 +868,9 @@
               </svg>
             </span>
             <div class="setting-copy">
-              <h2 id="excluded-heading" data-i18n="groupAllowlist">Group name allowlist</h2>
+              <h2 id="excluded-heading" data-i18n="groupAllowlist">Protected group names</h2>
               <p class="setting-subtitle" data-i18n="groupAllowlistDescription">
-                Tabs in groups whose names exactly match an entry are not discarded.
+                Tabs in groups whose names exactly match a name below won't be discarded.
               </p>
             </div>
             <button
@@ -909,7 +909,7 @@
             <div class="setting-copy">
               <h2 data-i18n="advancedSettings">Advanced settings</h2>
               <p class="setting-subtitle" data-i18n="advancedSettingsDescription">
-                Fine-tune restore timing, retries, and discard concurrency.
+                Adjust restore timing, retry behavior, and the number of tabs discarded at once.
               </p>
             </div>
           </summary>
@@ -917,40 +917,40 @@
           <div class="advanced-content">
             <label class="advanced-row" for="advanced-restore-window">
               <span>
-                <span class="advanced-label" data-i18n="restoreDetectionWindow">Restore detection window</span>
-                <span class="advanced-description" data-i18n="restoreDetectionWindowDescription">How long a new Tab can join the restore batch.</span>
+                <span class="advanced-label" data-i18n="restoreDetectionWindow">Restore detection window (ms)</span>
+                <span class="advanced-description" data-i18n="restoreDetectionWindowDescription">After a tab is created, this is how long it can be recognized as part of a group restore.</span>
               </span>
               <input class="strict-number-input" id="advanced-restore-window" type="number" min="1000" max="60000" step="100" required aria-describedby="advanced-restore-window-error" />
               <span class="field-error advanced-error" id="advanced-restore-window-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-cleanup-padding">
               <span>
-                <span class="advanced-label" data-i18n="detectionCleanupMargin">Detection cleanup margin</span>
-                <span class="advanced-description" data-i18n="detectionCleanupMarginDescription">Extra time before stale new-Tab tracking is removed.</span>
+                <span class="advanced-label" data-i18n="detectionCleanupMargin">Detection cleanup delay</span>
+                <span class="advanced-description" data-i18n="detectionCleanupMarginDescription">Extra time to keep tracking a new tab after the detection window ends.</span>
               </span>
               <input class="strict-number-input" id="advanced-cleanup-padding" type="number" min="0" max="10000" step="100" required aria-describedby="advanced-cleanup-padding-error" />
               <span class="field-error advanced-error" id="advanced-cleanup-padding-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-inspection-delay">
               <span>
-                <span class="advanced-label" data-i18n="groupInspectionDelay">Group inspection delay</span>
-                <span class="advanced-description" data-i18n="groupInspectionDelayDescription">Debounce time that lets a restored Group finish assembling.</span>
+                <span class="advanced-label" data-i18n="groupInspectionDelay">Group check delay</span>
+                <span class="advanced-description" data-i18n="groupInspectionDelayDescription">Wait this long after tabs join a group before checking which tabs can be discarded.</span>
               </span>
               <input class="strict-number-input" id="advanced-inspection-delay" type="number" min="0" max="5000" step="50" required aria-describedby="advanced-inspection-delay-error" />
               <span class="field-error advanced-error" id="advanced-inspection-delay-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-batch-ttl">
               <span>
-                <span class="advanced-label" data-i18n="restoreBatchLifetime">Restore batch lifetime</span>
-                <span class="advanced-description" data-i18n="restoreBatchLifetimeDescription">Maximum time title waiting can delay discard.</span>
+                <span class="advanced-label" data-i18n="restoreBatchLifetime">Restore timeout (ms)</span>
+                <span class="advanced-description" data-i18n="restoreBatchLifetimeDescription">Maximum time to handle a group restore, including time spent waiting for tab titles.</span>
               </span>
               <input class="strict-number-input" id="advanced-batch-ttl" type="number" min="1000" max="120000" step="100" required aria-describedby="advanced-batch-ttl-error" />
               <span class="field-error advanced-error" id="advanced-batch-ttl-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-discard-gap">
               <span>
-                <span class="advanced-label" data-i18n="discardStartGap">Discard start gap</span>
-                <span class="advanced-description" data-i18n="discardStartGapDescription">Pause before starting another discard worker.</span>
+                <span class="advanced-label" data-i18n="discardStartGap">Delay between discards</span>
+                <span class="advanced-description" data-i18n="discardStartGapDescription">Wait this long before starting the next discard operation.</span>
               </span>
               <input class="strict-number-input" id="advanced-discard-gap" type="number" min="0" max="1000" step="10" required aria-describedby="advanced-discard-gap-error" />
               <span class="field-error advanced-error" id="advanced-discard-gap-error" role="alert" hidden></span>
@@ -958,7 +958,7 @@
             <label class="advanced-row" for="advanced-retry-delay">
               <span>
                 <span class="advanced-label" data-i18n="retryDelay">Retry delay</span>
-                <span class="advanced-description" data-i18n="retryDelayDescription">Delay between title checks and transient discard retries.</span>
+                <span class="advanced-description" data-i18n="retryDelayDescription">Maximum time to wait before checking a title again or retrying a failed discard.</span>
               </span>
               <input class="strict-number-input" id="advanced-retry-delay" type="number" min="50" max="5000" step="50" required aria-describedby="advanced-retry-delay-error" />
               <span class="field-error advanced-error" id="advanced-retry-delay-error" role="alert" hidden></span>
@@ -966,15 +966,15 @@
             <label class="advanced-row" for="advanced-max-retries">
               <span>
                 <span class="advanced-label" data-i18n="maximumDiscardRetries">Maximum discard retries</span>
-                <span class="advanced-description" data-i18n="maximumDiscardRetriesDescription">How many times a failed discard API call is retried.</span>
+                <span class="advanced-description" data-i18n="maximumDiscardRetriesDescription">Maximum number of times to retry a failed discard operation.</span>
               </span>
               <input class="strict-number-input" id="advanced-max-retries" type="number" min="0" max="20" step="1" required aria-describedby="advanced-max-retries-error" />
               <span class="field-error advanced-error" id="advanced-max-retries-error" role="alert" hidden></span>
             </label>
             <label class="advanced-row" for="advanced-concurrency">
               <span>
-                <span class="advanced-label" data-i18n="discardConcurrency">Discard concurrency</span>
-                <span class="advanced-description" data-i18n="discardConcurrencyDescription">Maximum number of discard operations in flight at once.</span>
+                <span class="advanced-label" data-i18n="discardConcurrency">Simultaneous tab discards</span>
+                <span class="advanced-description" data-i18n="discardConcurrencyDescription">Maximum number of tabs that can be discarded at the same time.</span>
               </span>
               <input class="strict-number-input" id="advanced-concurrency" type="number" min="1" max="8" step="1" required aria-describedby="advanced-concurrency-error" />
               <span class="field-error advanced-error" id="advanced-concurrency-error" role="alert" hidden></span>
