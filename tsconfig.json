@@ -7,8 +7,6 @@
     "types": ["chrome-types"],
     "rootDir": "src",
     "outDir": "dist",
-    "sourceMap": true,
-    "inlineSources": true,
     "noEmitOnError": true,
     "forceConsistentCasingInFileNames": true
   },

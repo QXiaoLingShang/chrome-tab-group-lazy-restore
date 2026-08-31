@@ -1,14 +1,19 @@
 {
 	"name": "tab-group-lazy-restore",
-	"version": "0.3.2",
+	"version": "0.3.3",
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"build": "tsc -p tsconfig.json",
+		"build": "pnpm build:dev",
+		"build:dev": "node scripts/build.mjs dev",
+		"build:release": "pnpm typecheck && node scripts/build.mjs release",
+		"package:release": "pnpm build:release && node scripts/package-release.mjs",
 		"typecheck": "tsc --noEmit -p tsconfig.json"
 	},
 	"devDependencies": {
-		"typescript": "^7.0.2",
-		"chrome-types": "^0.1.440"
+		"archiver": "^8.0.0",
+		"chrome-types": "^0.1.440",
+		"esbuild": "^0.28.2",
+		"typescript": "^7.0.2"
 	}
 }
