@@ -69,17 +69,27 @@
         flex: 1;
       }
 
+      .header-title-row {
+        display: flex;
+        min-width: 0;
+        align-items: flex-end;
+      }
+
+      .header-title-row h1 {
+        min-width: 0;
+      }
+
       .save-status {
-        display: block;
-        height: 16px;
-        margin-top: 3px;
+        flex: 0 0 auto;
+        margin-left: 10px;
         color: var(--secondary-text);
-        font-size: 12px;
-        line-height: 16px;
+        font-size: 11px;
+        line-height: 1.2;
+        white-space: nowrap;
       }
 
       .save-status:empty {
-        visibility: hidden;
+        display: none;
       }
 
       .save-status.is-saved {
@@ -783,8 +793,10 @@
       <header class="page-header">
         <img class="header-icon" src="icons/icon48.png" alt="" />
         <div class="header-copy">
-          <h1 data-i18n="pageTitle">Tab Group Restore Settings</h1>
-          <span class="save-status" id="save-status" role="status" aria-live="polite"></span>
+          <div class="header-title-row">
+            <h1 data-i18n="pageTitle">Tab Group Restore Settings</h1>
+            <span class="save-status" id="save-status" role="status" aria-live="polite"></span>
+          </div>
         </div>
         <button class="secondary header-reset" id="reset-button" type="button" data-i18n="restoreDefaults">
           Restore defaults
