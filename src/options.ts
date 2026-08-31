@@ -8,6 +8,16 @@ import {
   ADVANCED_CONFIG_LIMITS,
   type AdvancedConfig
 } from "./advanced-config.js";
+import {
+  getCurrentLanguage,
+  loadLanguagePreference,
+  saveLanguagePreference,
+  setLanguage,
+  setLocalizedAttribute,
+  setLocalizedText,
+  type Language,
+  type TranslationKey
+} from "./i18n.js";
 
 function requiredElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -18,6 +28,9 @@ function requiredElement<T extends Element>(selector: string): T {
 }
 
 const settingsForm = requiredElement<HTMLFormElement>("#settings-form");
+const languageOptions = Array.from(
+  document.querySelectorAll<HTMLAnchorElement>("[data-language]")
+);
 const minTabsField = requiredElement<HTMLInputElement>("#min-tabs");
 const waitForTitleField = requiredElement<HTMLInputElement>("#wait-for-title");
 const groupTitleListShell = requiredElement<HTMLDivElement>("#title-list-shell");
@@ -40,16 +53,6 @@ const advancedFields: Record<keyof AdvancedConfig, HTMLInputElement> = {
   maxDiscardRetries: requiredElement<HTMLInputElement>("#advanced-max-retries"),
   maxConcurrentDiscards: requiredElement<HTMLInputElement>("#advanced-concurrency")
 };
-const advancedLabels: Record<keyof AdvancedConfig, string> = {
-  restoreWindowMs: "Restore detection window",
-  recentTabCleanupPaddingMs: "Detection cleanup margin",
-  inspectionDelayMs: "Group inspection delay",
-  batchTtlMs: "Restore batch lifetime",
-  discardGapMs: "Discard start gap",
-  retryDelayMs: "Retry delay",
-  maxDiscardRetries: "Maximum discard retries",
-  maxConcurrentDiscards: "Discard concurrency"
-};
 const advancedKeys = Object.keys(advancedFields) as Array<keyof AdvancedConfig>;
 const advancedErrors: Record<keyof AdvancedConfig, HTMLSpanElement> = {
   restoreWindowMs: requiredElement<HTMLSpanElement>("#advanced-restore-window-error"),
@@ -65,14 +68,15 @@ const advancedErrors: Record<keyof AdvancedConfig, HTMLSpanElement> = {
 let excludedGroupTitles: string[] = [];
 const MAX_VISIBLE_TITLE_ROWS = 5;
 const TITLE_LIST_LABELS = {
-  more: "Show more groups",
-  less: "Show less groups"
+  more: "showMoreGroups",
+  less: "showLessGroups"
 } as const;
 let saveTimer: number | null = null;
 let saveStatusTimer: number | null = null;
 
+/** Update the inline save feedback and clear any previous expiry timer. */
 function setSaveStatus(
-  message: string,
+  message: TranslationKey | "",
   state: "saving" | "saved" | "error" | "" = ""
 ): void {
   if (saveStatusTimer !== null) {
@@ -80,24 +84,26 @@ function setSaveStatus(
     saveStatusTimer = null;
   }
 
-  saveStatus.textContent = message;
+  setLocalizedText(saveStatus, message);
   saveStatus.className = state ? `save-status is-${state}` : "save-status";
 
   if (state === "saved") {
     saveStatusTimer = window.setTimeout(() => {
-      saveStatus.textContent = "";
+      setLocalizedText(saveStatus, "");
       saveStatus.className = "save-status";
       saveStatusTimer = null;
     }, 1800);
   }
 }
 
+/** Apply a translated validation message and keep the field's ARIA state aligned. */
 function setFieldError(
   field: HTMLInputElement,
   errorElement: HTMLElement,
-  message: string
+  message: TranslationKey | "",
+  parameters?: Record<string, string | number>
 ): void {
-  errorElement.textContent = message;
+  setLocalizedText(errorElement, message, parameters);
   errorElement.hidden = !message;
   if (message) {
     field.setAttribute("aria-invalid", "true");
@@ -106,9 +112,10 @@ function setFieldError(
   }
 }
 
+/** Clear every validation message before a fresh configuration is rendered. */
 function clearValidationMessages(): void {
   setFieldError(minTabsField, minTabsError, "");
-  titleEntryError.textContent = "";
+  setLocalizedText(titleEntryError, "");
   titleEntryError.hidden = true;
   for (const key of advancedKeys) {
     setFieldError(advancedFields[key], advancedErrors[key], "");
@@ -117,7 +124,7 @@ function clearValidationMessages(): void {
 
 /** Show a temporary notification in the toast region. */
 function showToast(
-  message: string,
+  message: TranslationKey,
   type: "success" | "error" | "pending" = "pending"
 ): void {
   const toastDuration = 3200;
@@ -128,12 +135,12 @@ function showToast(
 
   const messageElement = document.createElement("span");
   messageElement.className = "toast-message";
-  messageElement.textContent = message;
+  setLocalizedText(messageElement, message);
 
   const closeButton = document.createElement("button");
   closeButton.className = "toast-close";
   closeButton.type = "button";
-  closeButton.setAttribute("aria-label", "Dismiss notification");
+  setLocalizedAttribute(closeButton, "aria-label", "dismissNotification");
   closeButton.textContent = "×";
 
   let dismissTimer: number | null = null;
@@ -180,7 +187,7 @@ function scheduleSave(): void {
     window.clearTimeout(saveTimer);
   }
 
-  setSaveStatus("Saving…", "saving");
+  setSaveStatus("saving", "saving");
   // Use a short debounce after removing the Save button to reduce frequent storage writes.
   saveTimer = window.setTimeout(() => {
     saveTimer = null;
@@ -195,6 +202,7 @@ function cancelScheduledSave(): void {
   }
 }
 
+/** Update the allowlist fold state while preserving the current language. */
 function setTitleListCollapsed(collapsed: boolean): void {
   const hasLongList = excludedGroupTitles.length > MAX_VISIBLE_TITLE_ROWS;
   // fix: Collapse only on the initial load; keep the list open after edits or additions.
@@ -202,7 +210,10 @@ function setTitleListCollapsed(collapsed: boolean): void {
 
   groupTitleListShell.classList.toggle("is-collapsed", isCollapsed);
   groupTitleListToggle.hidden = !hasLongList;
-  groupTitleListToggle.textContent = isCollapsed ? TITLE_LIST_LABELS.more : TITLE_LIST_LABELS.less;
+  setLocalizedText(
+    groupTitleListToggle,
+    isCollapsed ? TITLE_LIST_LABELS.more : TITLE_LIST_LABELS.less
+  );
   groupTitleListToggle.setAttribute("aria-expanded", String(!isCollapsed));
 }
 
@@ -226,7 +237,9 @@ function renderExcludedTitles(focusLast = false, collapseLongList = false): void
     row.setAttribute("role", "listitem");
 
     const titleInput = createTitleInput(title);
-    titleInput.setAttribute("aria-label", `Allowlisted group title ${index + 1}`);
+    setLocalizedAttribute(titleInput, "aria-label", "allowlistedGroupTitleAriaLabel", {
+      index: index + 1
+    });
     titleInput.addEventListener("change", () => {
       const value = titleInput.value.trim();
       if (!value) {
@@ -249,7 +262,9 @@ function renderExcludedTitles(focusLast = false, collapseLongList = false): void
     const removeButton = document.createElement("button");
     removeButton.className = "remove-title";
     removeButton.type = "button";
-    removeButton.setAttribute("aria-label", `Remove allowlisted group: ${title}`);
+    setLocalizedAttribute(removeButton, "aria-label", "removeAllowlistedGroupAriaLabel", {
+      title
+    });
     removeButton.textContent = "×";
     removeButton.addEventListener("click", () => {
       excludedGroupTitles.splice(index, 1);
@@ -267,8 +282,8 @@ function renderExcludedTitles(focusLast = false, collapseLongList = false): void
   emptyRow.className = "title-entry-row";
 
   const emptyInput = createTitleInput();
-  emptyInput.placeholder = "Add group";
-  emptyInput.setAttribute("aria-label", "Add allowlisted group title");
+  setLocalizedAttribute(emptyInput, "placeholder", "addGroupPlaceholder");
+  setLocalizedAttribute(emptyInput, "aria-label", "addAllowlistedGroupAriaLabel");
   // fix: Enter can be followed by change on the old input; block the second commit and false duplicate error.
   let hasCommitted = false;
 
@@ -283,7 +298,7 @@ function renderExcludedTitles(focusLast = false, collapseLongList = false): void
     }
 
     if (excludedGroupTitles.includes(value)) {
-      setFieldError(emptyInput, titleEntryError, "This group is already on the allowlist.");
+      setFieldError(emptyInput, titleEntryError, "duplicateGroupError");
       return;
     }
 
@@ -320,6 +335,42 @@ groupTitleListToggle.addEventListener("click", () => {
   setTitleListCollapsed(!groupTitleListShell.classList.contains("is-collapsed"));
 });
 
+/** Switch the page language and persist the user's manual selection. */
+async function selectLanguage(language: Language): Promise<void> {
+  setLanguage(language);
+  updateLanguageOptions();
+
+  try {
+    await saveLanguagePreference(language);
+  } catch {
+    showToast("unableToRememberLanguage", "error");
+  }
+}
+
+/** Keep the active language visually and semantically marked in the footer. */
+function updateLanguageOptions(): void {
+  const currentLanguage = getCurrentLanguage();
+  for (const option of languageOptions) {
+    const isActive = option.dataset.language === currentLanguage;
+    option.setAttribute("aria-current", String(isActive));
+    option.classList.toggle("is-active", isActive);
+  }
+}
+
+function isLanguage(value: string | undefined): value is Language {
+  return value === "en" || value === "zh-CN";
+}
+
+languageOptions.forEach((option) => {
+  option.addEventListener("click", (event) => {
+    event.preventDefault();
+    const language = option.dataset.language;
+    if (isLanguage(language) && language !== getCurrentLanguage()) {
+      void selectLanguage(language);
+    }
+  });
+});
+
 addTitleButton.addEventListener("click", () => {
   // The + entry expands the allowlist and focuses the Add group input.
   setTitleListCollapsed(false);
@@ -350,9 +401,10 @@ function readAdvancedConfig(): AdvancedConfig | null {
       setFieldError(
         advancedFields[key],
         advancedErrors[key],
-        `${advancedLabels[key]} must be an integer between ${limits.min} and ${limits.max}.`
+        "advancedIntegerRangeError",
+        { min: limits.min, max: limits.max }
       );
-      setSaveStatus("Fix the highlighted field.", "error");
+      setSaveStatus("fixHighlightedField", "error");
       advancedFields[key].focus();
       return null;
     }
@@ -368,7 +420,7 @@ async function loadSettings(): Promise<void> {
   const config = await loadRestoreConfig();
   if (config === null) {
     fillForm(DEFAULT_RESTORE_CONFIG);
-    showToast("Unable to load settings.", "error");
+    showToast("unableToLoadSettings", "error");
     return;
   }
 
@@ -379,8 +431,8 @@ async function loadSettings(): Promise<void> {
 async function saveSettings(): Promise<void> {
   const minTabs = Number(minTabsField.value);
   if (!Number.isInteger(minTabs) || minTabs < 0) {
-    setFieldError(minTabsField, minTabsError, "Minimum tab count must be a non-negative integer.");
-    setSaveStatus("Fix the highlighted field.", "error");
+    setFieldError(minTabsField, minTabsError, "minimumTabCountError");
+    setSaveStatus("fixHighlightedField", "error");
     minTabsField.focus();
     return;
   }
@@ -408,10 +460,10 @@ async function saveSettings(): Promise<void> {
 
   try {
     await chrome.storage.local.set(config);
-    setSaveStatus("Saved", "saved");
+    setSaveStatus("saved", "saved");
   } catch {
-    setSaveStatus("Unable to save", "error");
-    showToast("Unable to save settings automatically.", "error");
+    setSaveStatus("unableToSave", "error");
+    showToast("unableToSaveSettingsAutomatically", "error");
   }
 }
 
@@ -420,14 +472,14 @@ async function resetSettings(): Promise<void> {
   try {
     // Cancel the pending auto-save before reset so stale values cannot overwrite defaults.
     cancelScheduledSave();
-    setSaveStatus("Saving…", "saving");
+    setSaveStatus("saving", "saving");
     await chrome.storage.local.set(DEFAULT_RESTORE_CONFIG);
     fillForm(DEFAULT_RESTORE_CONFIG);
-    setSaveStatus("Saved", "saved");
-    showToast("Defaults restored.", "success");
+    setSaveStatus("saved", "saved");
+    showToast("defaultsRestored", "success");
   } catch {
-    setSaveStatus("Unable to save", "error");
-    showToast("Unable to restore defaults.", "error");
+    setSaveStatus("unableToSave", "error");
+    showToast("unableToRestoreDefaults", "error");
   }
 }
 
@@ -458,4 +510,12 @@ settingsResetButton.addEventListener("click", () => {
   void resetSettings();
 });
 
-void loadSettings();
+/** Initialize the selected language before loading the saved restore settings. */
+async function initializeOptionsPage(): Promise<void> {
+  const language = await loadLanguagePreference();
+  setLanguage(language);
+  updateLanguageOptions();
+  await loadSettings();
+}
+
+void initializeOptionsPage();
